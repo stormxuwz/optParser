@@ -57,7 +57,7 @@ var yValue = function(d) { return d['timeElapsed'];}, // data -> value
     yAxis = d3.svg.axis().scale(yScale).orient("left");
 
 // setup fill color
-var cValue = function(d) { return d['hasOffer'];},
+var cValue = function(d) { return d['xxx'];},
     color = d3.scale.category10();
 
 // add the graph canvas to the body of the webpage
@@ -86,13 +86,14 @@ d3.json("results/results.json", function(error, data) {
     }
   });
 
+  var startDate = "1/1/2014"
   data = data.filter(function(d){
-    return d['timeElapsed'] && d['receivedDate'] >= new Date("1/1/2014") && d['hasOffer']
+    return d['timeElapsed'] && d['receivedDate'] >= new Date(startDate) && d['hasOffer']
   })
 
   // don't want dots overlapping axis, so add in buffer to data domain
-  xScale.domain([new Date("1/1/2014"), d3.max(data, xValue)]);
-  yScale.domain([0, 180]);
+  xScale.domain([new Date(startDate), d3.max(data, xValue)]);
+  yScale.domain([0, 140]);
 
   // x-axis
   svg.append("g")
@@ -104,7 +105,7 @@ d3.json("results/results.json", function(error, data) {
       .attr("x", width)
       .attr("y", -6)
       .style("text-anchor", "end")
-      .text("Received Date");
+      .text("USCIS Case Received Date");
 
   // y-axis
   svg.append("g")
@@ -144,27 +145,29 @@ d3.json("results/results.json", function(error, data) {
       });
 
   // draw legend
-  var legend = svg.selectAll(".legend")
-      .data(color.domain())
-    .enter().append("g")
-      .attr("class", "legend")
-      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+  if(color.domain().length > 1) {
+    var legend = svg.selectAll(".legend")
+        .data(color.domain())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-  // draw legend colored rectangles
-  legend.append("rect")
-      .attr("x", width - 18)
-      .attr("width", 18)
-      .attr("height", 18)
-      .style("fill", color)
-      .style("opacity", 0.5)
+    // draw legend colored rectangles
+    legend.append("rect")
+        .attr("x", width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color)
+        .style("opacity", 0.5)
 
-  // draw legend text
-  legend.append("text")
-      .attr("x", width -24)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .style("text-anchor", "end")
-      .text(function(d) { return d;})
+    // draw legend text
+    legend.append("text")
+        .attr("x", width -24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function(d) { return d;})
+    }
 });
 
 </script>
