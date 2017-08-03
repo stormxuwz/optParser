@@ -22,9 +22,9 @@ if python3:
 SEARCH_URL = 'http://www.trackitt.com/usa-immigration-trackers/opt/page/'
 
 START_SEARCH_IMG_INDEX = 0
-WAIT_RANGE = [50, 60]
+WAIT_RANGE = [0, 0]
 
-MAX_RESULT_NUM = 100
+MAX_RESULT_NUM = 10000
 MEME_TAG = "pipixia" #"pepe"
 currentTagIndex = 0
 
@@ -45,7 +45,7 @@ def scrape():
     global results
     # Reset results variable
     results = {
-        'items': {} # key: user name
+        'items': []
     }
 
     # Create a file to store the results or open the file and get old results
@@ -74,7 +74,6 @@ def scrape():
                 f.close()
 
         time.sleep(waitSecond)
-
     
     return "Done!"
 
@@ -90,6 +89,7 @@ def getPage(pageIndex):
     full_url = SEARCH_URL + str(int(pageIndex))
 
     print "-- [" + datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "] Scrapping page *" + str(pageIndex) +"*" + " URL=" + full_url
+    results['searchURL'] = full_url
 
     conn = pycurl.Curl()
     if python3:
@@ -120,30 +120,26 @@ def parseResults(code):
     # Get all rows
     divs = soup.findAll('tr', attrs={'class':re.compile('row')})
 
-    print len(divs)
-    exit()
+    keyList = [None, "username", None, None, "hasOffer", "serviceCenter", "applicationFiledDate", "processingType", "USCISReceivedDate", "RFEReceived", "RFEReceivedDate", "reasonForRFE", "RFERepliedDate", "applicationStatus", "approvalOrDenialDate", "cardOrderedDate", "EADReceived", "totalProcessingTime", "daysElapsed", "university", "notes", "state", "caseAddedDate", "lastUpdatedTime"]
 
     # Grab Items
     for div in divs:
         item = {}
         # Basic Info
-        item['imageID'] = imageId
-        item['originalImageLink'] = imageLink
         item['index'] = len(results['items'])
         item['exportDate'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item['searchURL'] = results['searchURL']
 
         # Search Result Info
-        item['title'] = div.find('h3', attrs={'class':'r'}).get_text()
-        item['timestamp'] = div.find('span', attrs={'class':'f'})
-        if item['timestamp'] != None:
-            item['timestamp'] = item['timestamp'].get_text()
-        item['description'] = div.find('span', attrs={'class':'st'})
-        if item['description'] != None:
-            item['description'] = item['description'].get_text()
-        item['link'] = div.find('a')
-        if item['link'] != None:
-            item['link'] = item['link']['href']
+        cells = div.findAll('td')
+        item['username'] = cells[1].find('strong').get_text()
+        item['nationality'] = cells[3].find('nobr').get_text()[1:] #[1:] to avoid return
+        item['hasOffer'] = cells[4].find('nobr').get_text()
+        for index in range(len(cells)):
+            element = cells[index].find('nobr')
+            key = keyList[index]
+            if key != None and element != None:
+                item[key] = element.get_text()
         results['items'].append(item)
 
     return len(divs)
